@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CP Plus IP Cam</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: #dcdcdc;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .login-container {
+        width: 420px;
+        background: linear-gradient(to bottom, #f0f0f0, #cfcfcf);
+        border-radius: 10px;
+        box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+
+    .header {
+        background: linear-gradient(to right, #ff3c3c, #c40000);
+        color: white;
+        padding: 12px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .header span {
+        font-size: 12px;
+        display: block;
+    }
+
+    .content {
+        display: flex;
+        padding: 20px;
+    }
+
+    .logo {
+        width: 40%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .logo-box {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(#666, #222);
+        transform: rotate(45deg);
+        position: relative;
+    }
+
+    .logo-box::after {
+        content: "";
+        width: 20px;
+        height: 20px;
+        background: red;
+        position: absolute;
+        top: 40%;
+        left: 40%;
+        transform: rotate(-45deg);
+    }
+
+    .form {
+        width: 60%;
+    }
+
+    label {
+        font-size: 13px;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input {
+        width: 100%;
+        padding: 6px;
+        margin-bottom: 10px;
+        border: 1px solid #aaa;
+        border-radius: 3px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    button {
+        padding: 6px 15px;
+        border: none;
+        background: #e0e0e0;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #c0c0c0;
+    }
+
+    .footer {
+        text-align: center;
+        font-size: 12px;
+        padding: 10px;
+        color: #555;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="header">
+        CP Plus Orange
+        <span>The World's Preferred Electronic Security Equipment</span>
+    </div>
+
+    <div class="content">
+        
+        <div class="logo">
+            <div class="logo-box"></div>
+        </div>
+
+        <div class="form">
+            <form method="POST" action="/login">
+                <label>Username:</label>
+                <input type="text" name="username" required>
+
+                <label>Password:</label>
+                <input type="password" name="password" required>
+
+                <div class="buttons">
+                    <button type="submit">Login</button>
+                    <button type="reset">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        support@camera.local
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Live</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: white;
+            font-family: Arial;
+            text-align: center;
+        }
+
+        .topbar {
+            background: #111;
+            padding: 12px;
+            font-size: 18px;
+        }
+
+        .live-text {
+            color: red;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .video-container {
+            margin-top: 10px;
+        }
+
+        video {
+            width: 800px;
+            max-height: 80vh;
+            border: 3px solid #222;
+            box-shadow: 0px 0px 15px red;
+        }
+
+        .bottom {
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .time {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            color: #00ff00;
+            font-family: monospace;
+        }
+
+        .rec {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    CP PLUS IP CAMERA
+    <span class="live-text">● LIVE STREAM</span>
+</div>
+
+<div class="time" id="time"></div>
+
+<div class="video-container">
+    <video autoplay loop muted playsinline>
+        <source src="{{ url_for('static', filename='Live.mp4') }}" type="video/mp4">
+    </video>
+</div>
+
+<div class="rec">● REC</div>
+
+<div class="bottom">
+    Camera ID: CP-01 | Status: Connected | Resolution: 1080p | 25 FPS
+</div>
+
+<script>
+setInterval(() => {
+    document.getElementById("time").innerText =
+        new Date().toLocaleString();
+}, 1000);
+</script>
+
+</body>
+</html>
