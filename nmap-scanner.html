@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetScan — Network Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1526;
+    --bg3: #151d35;
+    --panel: #111827;
+    --border: rgba(99,179,237,0.15);
+    --border2: rgba(99,179,237,0.3);
+    --accent: #38bdf8;
+    --accent2: #0ea5e9;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    background: rgba(10,14,26,0.8);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    animation: ping 2s ease infinite;
+  }
+  .logo-icon::after {
+    content: '';
+    position: absolute;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  @keyframes ping {
+    0% { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+  .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
+  .logo-text span { color: var(--accent); }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    min-height: calc(100vh - 70px);
+  }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 8px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* FORM */
+  label { font-size: 0.8rem; color: var(--muted); display: block; margin-bottom: 0.4rem; font-family: var(--mono); }
+  input[type="text"], select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 1rem;
+    appearance: none;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--accent2); }
+  select option { background: var(--bg3); }
+
+  /* PROTOCOL CHECKBOXES */
+  .proto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+  .proto-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    user-select: none;
+    background: var(--bg3);
+  }
+  .proto-check:hover { border-color: var(--accent2); }
+  .proto-check.active { border-color: var(--accent); background: rgba(56,189,248,0.08); color: var(--accent); }
+  .proto-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-http { background: var(--green); }
+  .dot-ftp { background: var(--orange); }
+  .dot-ssh { background: var(--purple); }
+  .dot-smtp { background: var(--yellow); }
+  .dot-rdp { background: var(--red); }
+  .dot-dns { background: var(--accent); }
+  .dot-mysql { background: #f472b6; }
+  .dot-snmp { background: #34d399; }
+
+  /* SCAN MODES */
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+  .mode-btn {
+    padding: 0.55rem 0;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    transition: all 0.2s;
+    color: var(--muted);
+    background: var(--bg3);
+  }
+  .mode-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .mode-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.08); }
+
+  .scan-btn {
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--accent2);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .scan-btn:hover { background: var(--accent); transform: translateY(-1px); }
+  .scan-btn:active { transform: translateY(0); }
+  .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .scan-btn.scanning {
+    background: var(--bg3);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; }
+  .stat { background: var(--bg3); border-radius: 8px; padding: 0.75rem; text-align: center; border: 1px solid var(--border); }
+  .stat-num { font-family: var(--mono); font-size: 1.4rem; font-weight: 600; }
+  .stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+  .num-hosts { color: var(--green); }
+  .num-ports { color: var(--accent); }
+  .num-vuln { color: var(--red); }
+
+  /* RIGHT PANEL */
+  .right-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  /* TERMINAL */
+  .terminal {
+    background: #050810;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 1;
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+  .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .t-dot:nth-child(1) { background: #ff5f57; }
+  .t-dot:nth-child(2) { background: #ffbd2e; }
+  .t-dot:nth-child(3) { background: #28c840; }
+  .terminal-title { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+  .terminal-body {
+    padding: 1rem;
+    height: 320px;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+  .terminal-body::-webkit-scrollbar { width: 4px; }
+  .terminal-body::-webkit-scrollbar-track { background: transparent; }
+  .terminal-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .t-prompt { color: var(--accent); }
+  .t-cmd { color: var(--text); }
+  .t-info { color: var(--muted); }
+  .t-ok { color: var(--green); }
+  .t-warn { color: var(--yellow); }
+  .t-err { color: var(--red); }
+  .t-host { color: var(--purple); }
+  .t-port { color: var(--orange); }
+  .t-service { color: var(--accent); }
+  .cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* RESULTS TABLE */
+  .results-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .results-title { font-weight: 700; font-size: 0.9rem; }
+  .filter-bar { display: flex; gap: 0.5rem; }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.08); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-align: left;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(99,179,237,0.06);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(56,189,248,0.04); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td {
+    padding: 0.7rem 1.25rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    font-family: var(--mono);
+  }
+  .badge-open { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .badge-closed { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+  .badge-filtered { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .badge-http { color: #4ade80; }
+  .badge-ftp { color: #fb923c; }
+  .badge-ssh { color: #a78bfa; }
+  .badge-smtp { color: #fbbf24; }
+  .badge-rdp { color: #f87171; }
+  .badge-dns { color: #38bdf8; }
+  .badge-mysql { color: #f472b6; }
+  .badge-snmp { color: #34d399; }
+  .badge-other { color: var(--muted); }
+
+  .ip-cell { color: var(--purple); }
+  .port-cell { color: var(--orange); }
+
+  /* PROGRESS BAR */
+  .progress-wrap { display: none; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); }
+  .progress-wrap.show { display: block; }
+  .progress-label { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+  .progress-bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; transition: width 0.3s; width: 0%; }
+
+  /* NO DATA */
+  .no-data {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+  }
+  .no-data-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.3;
+  }
+
+  /* SCAN PULSE */
+  @keyframes scanPulse {
+    0% { box-shadow: 0 0 0 0 rgba(56,189,248,0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(56,189,248,0); }
+    100% { box-shadow: 0 0 0 0 rgba(56,189,248,0); }
+  }
+  .scanning-pulse { animation: scanPulse 1.5s infinite; }
+
+  .results-scroll { max-height: 360px; overflow-y: auto; }
+  .results-scroll::-webkit-scrollbar { width: 4px; }
+  .results-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  @media (max-width: 1024px) {
+    main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <div class="logo-text">Net<span>Scan</span></div>
+  </div>
+  <div class="header-badge">NETWORK INTELLIGENCE TOOL</div>
+</header>
+
+<main>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Target Config -->
+    <div class="card">
+      <div class="card-title">Target Configuration</div>
+      <label>Subnet / IP Range</label>
+      <input type="text" id="subnet" value="192.168.1.0/24" placeholder="e.g. 192.168.1.0/24">
+      <label>Port Range</label>
+      <input type="text" id="portRange" value="1-1024" placeholder="e.g. 1-1024 or 22,80,443">
+    </div>
+
+    <!-- Scan Mode -->
+    <div class="card">
+      <div class="card-title">Scan Mode</div>
+      <div class="mode-grid">
+        <div class="mode-btn active" data-mode="SYN" onclick="selectMode(this)">-sS SYN</div>
+        <div class="mode-btn" data-mode="TCP" onclick="selectMode(this)">-sT TCP</div>
+        <div class="mode-btn" data-mode="UDP" onclick="selectMode(this)">-sU UDP</div>
+        <div class="mode-btn" data-mode="PING" onclick="selectMode(this)">-sn PING</div>
+      </div>
+      <label>Timing Template</label>
+      <select id="timing">
+        <option value="T1">T1 — Sneaky</option>
+        <option value="T2">T2 — Polite</option>
+        <option value="T3" selected>T3 — Normal</option>
+        <option value="T4">T4 — Aggressive</option>
+        <option value="T5">T5 — Insane</option>
+      </select>
+    </div>
+
+    <!-- Protocol Filters -->
+    <div class="card">
+      <div class="card-title">Protocol Filters</div>
+      <div class="proto-grid">
+        <div class="proto-check active" data-proto="HTTP" onclick="toggleProto(this)"><span class="proto-dot dot-http"></span>HTTP/S</div>
+        <div class="proto-check active" data-proto="SSH" onclick="toggleProto(this)"><span class="proto-dot dot-ssh"></span>SSH</div>
+        <div class="proto-check active" data-proto="FTP" onclick="toggleProto(this)"><span class="proto-dot dot-ftp"></span>FTP</div>
+        <div class="proto-check active" data-proto="SMTP" onclick="toggleProto(this)"><span class="proto-dot dot-smtp"></span>SMTP</div>
+        <div class="proto-check active" data-proto="RTMP" onclick="toggleProto(this)"><span class="proto-dot dot-rtmp"></span>RTMP</div>
+        <div class="proto-check active" data-proto="DNS" onclick="toggleProto(this)"><span class="proto-dot dot-dns"></span>DNS</div>
+        <div class="proto-check active" data-proto="RTSP" onclick="toggleProto(this)"><span class="proto-dot dot-rtsp"></span>RTSP</div>
+        <div class="proto-check active" data-proto="SNMP" onclick="toggleProto(this)"><span class="proto-dot dot-snmp"></span>SNMP</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-title">Scan Results</div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num num-hosts" id="statHosts">0</div>
+          <div class="stat-label">Hosts</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num num-ports" id="statPorts">0</div>
+          <div class="stat-label">Open Ports</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num num-vuln" id="statVuln">0</div>
+          <div class="stat-label">Flagged</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Button -->
+    <button class="scan-btn" id="scanBtn" onclick="startScan()">▶ &nbsp; RUN SCAN</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Terminal -->
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div>
+        <span class="terminal-title">nmap output</span>
+      </div>
+      <div class="terminal-body" id="termBody">
+        <div><span class="t-prompt">root@netscan:~$</span> <span class="t-info"># Enter target details and click RUN SCAN</span></div>
+        <div><span class="t-info">NetScan v2.4.1 — Network Intelligence Tool</span></div>
+        <div><span class="t-info">Ready. <span class="cursor"></span></span></div>
+      </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="results-wrap">
+      <div class="results-header">
+        <span class="results-title">Discovered Services</span>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterTable(this,'all')">All</button>
+          <button class="filter-btn" onclick="filterTable(this,'open')">Open</button>
+          <button class="filter-btn" onclick="filterTable(this,'filtered')">Filtered</button>
+          <button class="filter-btn" onclick="filterTable(this,'closed')">Closed</button>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label"><span id="progressLabel">Scanning...</span><span id="progressPct">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="results-scroll">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>IP Address</th>
+              <th>Hostname</th>
+              <th>Port</th>
+              <th>Protocol</th>
+              <th>Service</th>
+              <th>Version</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr><td colspan="7" class="no-data"><div class="no-data-icon">⬡</div>No scan results yet. Configure target and run scan.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let scanMode = 'SYN';
+let activeProtos = new Set(['HTTP','SSH','FTP','SMTP','RTMP','DNS','RTSP','SNMP']);
+let scanInterval = null;
+let allResults = [];
+let currentFilter = 'all';
+
+function selectMode(el) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  scanMode = el.dataset.mode;
+}
+
+function toggleProto(el) {
+  el.classList.toggle('active');
+  const p = el.dataset.proto;
+  if (activeProtos.has(p)) activeProtos.delete(p);
+  else activeProtos.add(p);
+  if (allResults.length) renderTable();
+}
+
+function filterTable(el, f) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = f;
+  renderTable();
+}
+
+function log(html) {
+  const body = document.getElementById('termBody');
+  const line = document.createElement('div');
+  line.innerHTML = html;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+const hostnames = {
+  '1': 'gateway.local', '2': 'server01.local', '5': 'workstation-05.local',
+  '10': 'nas01.local', '20': 'printer.local', '25': 'switch01.local',
+  '50': 'db-server.local', '100': 'web-server.local', '110': 'mail-server.local',
+  '150': 'backup.local', '200': 'iot-hub.local', '254': 'firewall.local'
+};
+
+const serviceDb = [
+  { port: 22,   proto: 'TCP', service: 'SSH',   label: 'SSH',   version: 'OpenSSH 8.9p1',      state: 'open',     flag: false },
+  { port: 80,   proto: 'TCP', service: 'HTTP',  label: 'HTTP',  version: 'Apache 2.4.52',       state: 'open',     flag: false },
+  { port: 443,  proto: 'TCP', service: 'HTTP',  label: 'HTTPS', version: 'nginx 1.22.0',        state: 'open',     flag: false },
+  { port: 21,   proto: 'TCP', service: 'FTP',   label: 'FTP',   version: 'vsftpd 3.0.5',        state: 'open',     flag: true  },
+  { port: 23,   proto: 'TCP', service: 'OTHER', label: 'TELNET',version: 'Linux telnetd',        state: 'open',     flag: true  },
+  { port: 25,   proto: 'TCP', service: 'SMTP',  label: 'SMTP',  version: 'Postfix 3.6.4',       state: 'open',     flag: false },
+  { port: 3389, proto: 'TCP', service: 'RDP',   label: 'RDP',   version: 'Microsoft RDP 10.0',  state: 'open',     flag: true  },
+  { port: 53,   proto: 'UDP', service: 'DNS',   label: 'DNS',   version: 'BIND 9.18.1',         state: 'open',     flag: false },
+  { port: 3306, proto: 'TCP', service: 'MySQL', label: 'MySQL', version: 'MySQL 8.0.32',        state: 'open',     flag: false },
+  { port: 161,  proto: 'UDP', service: 'SNMP',  label: 'SNMPv1',version: 'Net-SNMP 5.9.1',      state: 'open',     flag: true  },
+  { port: 8080, proto: 'TCP', service: 'HTTP',  label: 'HTTP-alt', version: 'Jetty 11.0',       state: 'filtered', flag: false },
+  { port: 445,  proto: 'TCP', service: 'OTHER', label: 'SMB',   version: 'Samba 4.15.2',        state: 'open',     flag: true  },
+  { port: 135,  proto: 'TCP', service: 'OTHER', label: 'MSRPC', version: 'Microsoft RPC',       state: 'filtered', flag: false },
+  { port: 8443, proto: 'TCP', service: 'HTTP',  label: 'HTTPS-alt', version: 'Apache Tomcat 10', state: 'open',    flag: false },
+  { port: 110,  proto: 'TCP', service: 'SMTP',  label: 'POP3',  version: 'Dovecot',             state: 'closed',   flag: false },
+];
+
+function getRandomServices(count) {
+  const shuffled = [...serviceDb].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+function parseSubnet(subnet) {
+  const lastOctetBase = subnet.includes('/') ? 1 : 1;
+  const base = subnet.split('/')[0].split('.').slice(0,3).join('.');
+  const hosts = [1,2,5,10,20,25,50,100,110,150,200,254].filter(() => Math.random() > 0.35);
+  return hosts.map(h => ({
+    ip: `${base}.${h}`,
+    lastOctet: String(h),
+    hostname: hostnames[h] || `host-${h}.local`
+  }));
+}
+
+async function startScan() {
+  const btn = document.getElementById('scanBtn');
+  if (btn.disabled) return;
+
+  const subnet = document.getElementById('subnet').value.trim();
+  const portRange = document.getElementById('portRange').value.trim();
+  const timing = document.getElementById('timing').value;
+
+  btn.disabled = true;
+  btn.classList.add('scanning', 'scanning-pulse');
+  btn.textContent = '⏳  SCANNING...';
+
+  document.getElementById('statHosts').textContent = '0';
+  document.getElementById('statPorts').textContent = '0';
+  document.getElementById('statVuln').textContent = '0';
+  document.getElementById('resultsBody').innerHTML = '';
+  allResults = [];
+
+  const progressWrap = document.getElementById('progressWrap');
+  progressWrap.classList.add('show');
+
+  // Clear terminal
+  const termBody = document.getElementById('termBody');
+  termBody.innerHTML = '';
+
+  const timing_ms = { T1: 800, T2: 500, T3: 300, T4: 180, T5: 80 }[timing] || 300;
+  const modeFlag = { SYN: '-sS', TCP: '-sT', UDP: '-sU', PING: '-sn' }[scanMode];
+
+  log(`<span class="t-prompt">root@netscan:~$</span> <span class="t-cmd">nmap ${modeFlag} -${timing} -p ${portRange} --open ${subnet}</span>`);
+  await sleep(400);
+  log(`<span class="t-info">Starting NetScan 2.4.1 ( https://nmap.org ) at ${new Date().toLocaleTimeString()}</span>`);
+  await sleep(300);
+  log(`<span class="t-info">Initiating ${scanMode} Scan — Timing template: ${timing}</span>`);
+  await sleep(timing_ms);
+  log(`<span class="t-info">Scanning subnet ${subnet} [${portRange} ports]</span>`);
+  await sleep(timing_ms);
+
+  const hosts = parseSubnet(subnet);
+  const total = hosts.length;
+  let hostsDone = 0, openPorts = 0, flagged = 0;
+
+  for (const host of hosts) {
+    await sleep(timing_ms * 0.8 + Math.random() * timing_ms);
+    log(`<span class="t-info">Host </span><span class="t-host">${host.ip}</span><span class="t-info"> (${host.hostname}) is up (latency: ${(Math.random()*4+0.2).toFixed(3)}ms)</span>`);
+    await sleep(timing_ms * 0.5);
+
+    const services = getRandomServices(Math.floor(Math.random()*4)+2);
+    for (const svc of services) {
+      await sleep(timing_ms * 0.3);
+      const protoLabel = `<span class="badge-${svc.service.toLowerCase()}">${svc.label}</span>`;
+      const stateColor = svc.state === 'open' ? 't-ok' : svc.state === 'filtered' ? 't-warn' : 't-err';
+      log(`  <span class="t-port">${svc.port}/tcp</span> <span class="${stateColor}">${svc.state.padEnd(10)}</span> <span class="t-service">${svc.label.padEnd(12)}</span> <span class="t-info">${svc.version}</span>${svc.flag ? ' <span class="t-err">⚠ FLAGGED</span>' : ''}`);
+
+      allResults.push({
+        ip: host.ip,
+        hostname: host.hostname,
+        port: svc.port,
+        proto: svc.proto,
+        service: svc.service,
+        label: svc.label,
+        version: svc.version,
+        state: svc.state,
+        flag: svc.flag
+      });
+
+      if (svc.state === 'open') openPorts++;
+      if (svc.flag) flagged++;
+    }
+
+    hostsDone++;
+    const pct = Math.round((hostsDone / total) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressLabel').textContent = `Scanning host ${hostsDone}/${total} — ${host.ip}`;
+    document.getElementById('statHosts').textContent = hostsDone;
+    document.getElementById('statPorts').textContent = openPorts;
+    document.getElementById('statVuln').textContent = flagged;
+    renderTable();
+  }
+
+  await sleep(timing_ms);
+  log(`<span class="t-ok">Scan complete! ${total} hosts up — ${openPorts} open ports found in ${(Math.random()*8+2).toFixed(2)}s</span>`);
+  log(`<span class="t-prompt">root@netscan:~$</span> <span class="cursor"></span>`);
+
+  progressWrap.classList.remove('show');
+  btn.disabled = false;
+  btn.classList.remove('scanning', 'scanning-pulse');
+  btn.innerHTML = '↺ &nbsp; RE-SCAN';
+}
+
+function getServiceClass(service) {
+  const map = { HTTP:'http', FTP:'ftp', SSH:'ssh', SMTP:'smtp', RDP:'rdp', DNS:'dns', MySQL:'mysql', SNMP:'snmp' };
+  return map[service] || 'other';
+}
+
+function renderTable() {
+  const body = document.getElementById('resultsBody');
+  const filtered = allResults.filter(r => {
+    if (!activeProtos.has(r.service) && r.service !== 'OTHER') return false;
+    if (currentFilter === 'open' && r.state !== 'open') return false;
+    if (currentFilter === 'closed' && r.state !== 'closed') return false;
+    if (currentFilter === 'filtered' && r.state !== 'filtered') return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="7" class="no-data"><div class="no-data-icon">⬡</div>No results match current filters.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = filtered.map(r => {
+    const sc = getServiceClass(r.service);
+    const stateBadge = `<span class="badge badge-${r.state}">${r.state}</span>`;
+    const flag = r.flag ? ' <span style="color:#f87171;font-size:0.7rem;" title="Security concern">⚠</span>' : '';
+    return `<tr>
+      <td class="ip-cell">${r.ip}</td>
+      <td style="color:var(--muted);font-size:0.72rem;">${r.hostname}</td>
+      <td class="port-cell">${r.port}</td>
+      <td style="color:var(--muted)">${r.proto}</td>
+      <td><span class="badge-${sc}">${r.label}</span>${flag}</td>
+      <td style="color:var(--muted);font-size:0.72rem;">${r.version}</td>
+      <td>${stateBadge}</td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
